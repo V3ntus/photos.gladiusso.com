@@ -2,6 +2,7 @@ import { cn } from '@/utilities/ui'
 import React from 'react'
 
 import { Card, CardPostData } from '@/components/Card'
+import { Reveal } from '@/components/motion/Reveal'
 
 export type Props = {
   posts: CardPostData[]
@@ -17,9 +18,9 @@ export const CollectionArchive: React.FC<Props> = (props) => {
           {posts?.map((result, index) => {
             if (typeof result === 'object' && result !== null) {
               return (
-                <div className="col-span-4" key={index}>
+                <Reveal as="div" className="col-span-4" key={index}>
                   <Card className="h-full" doc={result} relationTo="posts" showCategories />
-                </div>
+                </Reveal>
               )
             }
 

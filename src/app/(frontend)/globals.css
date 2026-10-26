@@ -222,3 +222,221 @@ html[data-theme='dark'],
 html[data-theme='light'] {
   opacity: initial;
 }
+
+/*
+ * Halide Portfolio — darkroom design system (see DESIGN.md).
+ *
+ * Everything here animates transform / opacity / filter only (GPU-
+ * accelerated, zero layout shift per DESIGN.md §5). The exact durations
+ * and easings from DESIGN.md are exposed as tokens and reused below.
+ */
+
+/* ————— Motion & palette tokens (DESIGN.md §2–§4) ————— */
+:root {
+  /* Deep obsidian background & warm tungsten accents (DESIGN.md §3.1) */
+  --obsidian: #0d0e11;
+  --frame: #26272b;
+  --tungsten: #f59e0b;
+  --tungsten-soft: rgba(245, 158, 11, 0.35); /* frame border lift @35% (§4.1) */
+  --tungsten-faint: rgba(245, 158, 11, 0.08); /* glow @8% (§4.1/§3.1) */
+
+  /* Darkroom Exposure Shift — route transition (§2.1) */
+  --dur-exit: 280ms;
+  --dur-enter: 480ms;
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Sidebar / rail indicator slide (§2.1) */
+  --dur-indicator: 380ms;
+  --ease-indicator: cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* Enlarger Exposure Lift — plate hover (§4.1) */
+  --dur-plate: 400ms;
+  --ease-plate: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-plate-img: 600ms;
+}
+
+[data-theme='light'] {
+  --obsidian: #f5f4f2;
+  --frame: #d4d0c8;
+}
+
+/* Deep obsidian wash beneath every surface (§3.1) */
+body {
+  background-color: var(--obsidian);
+}
+
+/*
+ * Organic film grain + halation shimmer (§3.1)
+ * Procedural fractal-noise tile (SVG feTurbulence) at ultra-subtle
+ * opacity; the tungsten vignette breathes on a 14s cycle, anchored to
+ * the top-right, fixed behind all content.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+[data-theme='light'] body::before {
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+}
+
+.ambient-amber-glow,
+body::after {
+  position: fixed;
+  inset: -10%;
+  z-index: 30;
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  background: radial-gradient(
+    60rem 40rem at 85% 5%,
+    var(--tungsten-faint),
+    transparent 62%
+  );
+  animation: darkroom-amber-breathe 14s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+@keyframes darkroom-amber-breathe {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 0.22;
+    transform: scale(1.04) translate(-1%, 1%);
+  }
+}
+
+/*
+ * Darkroom Exposure Shift — route transition (§2.1)
+ * The wrapper dips in luminance as the enlarger lamp turns down, while
+ * the incoming page (re-keyed by pathname) emerges from deep shadow.
+ */
+.route-enter {
+  animation: route-enter var(--dur-enter) var(--ease-enter) both;
+}
+
+@keyframes route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lamp-dip {
+  animation: lamp-dip calc(var(--dur-exit) + var(--dur-enter)) ease
+    both;
+}
+
+/* Trough lands exactly at the 280ms exit point, then recovers while the
+   incoming page is entering — 280 / (280 + 480) ≈ 37%. */
+@keyframes lamp-dip {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  37% {
+    opacity: 0.82;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+ * Enlarger Exposure Lift — plate hover (§4.1)
+ * Applied to photo "plates" in archives / contact sheets.
+ */
+.photo-plate {
+  border: 1px solid var(--frame);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--card);
+  cursor: pointer;
+  transition:
+    transform var(--dur-plate) var(--ease-plate),
+    border-color 300ms ease,
+    box-shadow var(--dur-plate) ease;
+}
+
+.photo-plate:hover {
+  transform: translateY(-2px);
+  border-color: var(--tungsten-soft);
+  box-shadow:
+    0 16px 36px -12px rgba(0, 0, 0, 0.7),
+    0 0 20px -4px var(--tungsten-faint);
+}
+
+.photo-plate .photo-plate__img {
+  transition:
+    transform var(--dur-plate-img) var(--ease-enter),
+    filter 400ms ease;
+}
+
+.photo-plate:hover .photo-plate__img {
+  transform: scale(1.018);
+  filter: brightness(1.04) contrast(1.02);
+}
+
+/*
+ * Emulsion develop — scroll-triggered reveal (§4.3)
+ * "Plates" enter the viewport undeveloped, then develop to full exposure
+ * (see the Reveal component, which toggles .is-visible).
+ */
+.reveal {
+  opacity: 0;
+  filter: blur(4px) contrast(1.4);
+  transform: translateY(12px);
+}
+
+.reveal.is-visible {
+  animation: emulsion-develop 720ms var(--ease-enter) both;
+}
+
+@keyframes emulsion-develop {
+  from {
+    opacity: 0;
+    filter: blur(4px) contrast(1.4);
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) contrast(1);
+    transform: translateY(0);
+  }
+}
+
+/*
+ * Accessibility guardrail (§5) — disable all motion for users who prefer
+ * reduced motion. Duration is clamped, not removed, so reveals still
+ * complete (content becomes visible) instead of getting stuck.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
