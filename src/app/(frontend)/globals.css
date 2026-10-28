@@ -45,6 +45,7 @@
   --breakpoint-2xl: 86rem;
   --font-mono: var(--font-geist-mono);
   --font-sans: var(--font-geist-sans);
+  --font-header: var(--font-bodoni-moda);
 }
 
 @layer utilities {
@@ -359,6 +360,219 @@ body::after {
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+h1, h2, h3 {
+  font-family: var(--font-header), serif;
+  text-transform: uppercase;
+}
+
+/*
+ * Darkroom sidebar — left navigation rail (§2.1)
+ * The nav is a sticky full-viewport left rail that occupies the left column
+ * in the body's flex row: brand on top, numbered sections in the middle
+ * ("01 All Photos", "02 Albums", …), theme control at the bottom. The main
+ * column (the `flex-1` sibling) is thereby offset to the right, and the
+ * footer beneath spans only that column.
+ *
+ * The active section is marked by a gold bullet + amber highlight bar that
+ * slides in Y only, with the §2.1 `transform 380ms cubic-bezier(0.25, 1,
+ * 0.5, 1)` easing; labels, numbers and the indicator cross-fade colors
+ * over 240ms (the §3/§5 tokens + guardrails in this file apply).
+ */
+html,
+body {
+  min-height: 100%;
+}
+
+.dr-sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 11rem;
+  height: 100vh;
+  height: 100dvh;
+  border-right: 1px solid var(--border);
+  background-color: var(--card);
+}
+
+.dr-sidebar__brand {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 1.75rem 0.75rem 1rem;
+}
+
+.dr-nav {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 0.5rem 0.5rem;
+}
+
+.nav-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.75rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.75rem;
+  text-align: left;
+  opacity: 0.9;
+  transition:
+    color 240ms ease,
+    opacity 240ms ease,
+    transform 240ms ease;
+}
+
+.nav-item:hover {
+  color: var(--foreground);
+  opacity: 1;
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.nav-item[data-active='true'] {
+  color: var(--tungsten);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Frame tag (§4.1) — the section number, glints tungsten when active. */
+.nav-item__num {
+  display: inline-flex;
+  width: 1.5rem;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  opacity: 0.65;
+  transition:
+    color 240ms ease,
+    opacity 240ms ease;
+}
+
+.nav-item__label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-item[data-active='true'] .nav-item__num {
+  color: var(--tungsten);
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .nav-item[data-active='true'] .nav-item__num {
+    filter: drop-shadow(0 0 6px var(--tungsten-soft));
+  }
+}
+
+/*
+ * Active indicator: the "gold bullet and yellow highlight bar" of §2.1.
+ * A marker whose only animated property is a Y-transform — transform
+ * 380ms cubic-bezier(0.25, 1, 0.5, 1) on the §2.1 tokens; zero layout
+ * shift (DESIGN.md §5).
+ */
+.nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  height: 2rem;
+  pointer-events: none;
+  transform: translateY(0);
+  transition:
+    transform var(--dur-indicator) var(--ease-indicator),
+    opacity var(--dur-indicator) var(--ease-indicator);
+  will-change: transform;
+}
+
+.nav-indicator__bar {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 2px;
+  background: var(--tungsten);
+}
+
+.nav-indicator__bullet {
+  position: absolute;
+  top: 50%;
+  right: 1.25rem;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: var(--tungsten);
+  box-shadow: 0 0 12px 2px var(--tungsten-soft);
+  transform: translateY(-50%);
+}
+
+.dr-footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: 3.25rem;
+  border-top: 1px solid var(--frame);
+}
+
+/*
+ * Below the md breakpoint (48rem — matches the template's sm/md zones) the
+ * rail compacts to number/icon only so the content column keeps width.
+ */
+@media (max-width: 47.9375rem) {
+  .dr-sidebar {
+    width: 4.75rem;
+  }
+
+  .dr-sidebar__brand {
+    padding-left: 0.375rem;
+    padding-right: 0.375rem;
+  }
+
+  .dr-sidebar__brand img {
+    max-width: 4rem;
+  }
+
+  .nav-item {
+    justify-content: center;
+  }
+
+  .nav-item__label,
+  .nav-item__search {
+    display: none;
+  }
+
+  .nav-indicator__bullet {
+    right: 0.625rem;
+  }
+
+  footer {
+    display: none;
   }
 }
 
