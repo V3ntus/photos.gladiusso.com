@@ -94,11 +94,11 @@
   --card-foreground: oklch(14.5% 0 0deg);
   --popover: oklch(100% 0 0deg);
   --popover-foreground: oklch(14.5% 0 0deg);
-  --primary: oklch(20.5% 0 0deg);
+  --primary: oklch(0.7686 0.1647 70.08);
   --primary-foreground: oklch(98.5% 0 0deg);
-  --secondary: oklch(97% 0 0deg);
-  --secondary-foreground: oklch(20.5% 0 0deg);
-  --muted: oklch(97% 0 0deg);
+  --secondary: oklch(0.6368 0.2078 25.33);
+  --secondary-foreground: oklch(98.5% 0 0deg);
+  --muted: oklch(0.7686 0.1247 70.08);
   --muted-foreground: oklch(55.6% 0 0deg);
   --accent: oklch(97% 0 0deg);
   --accent-foreground: oklch(20.5% 0 0deg);
@@ -133,11 +133,11 @@
   --card-foreground: oklch(98.5% 0 0deg);
   --popover: oklch(14.5% 0 0deg);
   --popover-foreground: oklch(98.5% 0 0deg);
-  --primary: oklch(98.5% 0 0deg);
+  --primary: oklch(0.7686 0.1647 70.08);
   --primary-foreground: oklch(20.5% 0 0deg);
-  --secondary: oklch(26.9% 0 0deg);
+  --secondary: oklch(0.6368 0.2078 25.33);
   --secondary-foreground: oklch(98.5% 0 0deg);
-  --muted: oklch(26.9% 0 0deg);
+  --muted: oklch(0.7686 0.1247 70.08);
   --muted-foreground: oklch(70.8% 0 0deg);
   --accent: oklch(26.9% 0 0deg);
   --accent-foreground: oklch(98.5% 0 0deg);
@@ -365,6 +365,11 @@ body::after {
 
 h1, h2, h3 {
   font-family: var(--font-header), serif;
+  text-transform: uppercase;
+}
+
+.button {
+  font-family: var(--font-mono), sans-serif;
   text-transform: uppercase;
 }
 

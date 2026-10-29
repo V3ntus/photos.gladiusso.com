@@ -40,6 +40,7 @@ export const MediumImpactHero: React.FC<Page['hero']> = ({ links, media, richTex
             )}
           </div>
         )}
+        <hr />
       </div>
     </div>
   )
