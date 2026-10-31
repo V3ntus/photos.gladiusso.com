@@ -617,6 +617,329 @@ body {
 }
 
 /*
+ * Continuous film strip — featured negative rail (§3.2)
+ * Selected negatives sit on an obsidian strip; the strip is a horizontal
+ * scrub viewport (§3.2): cursor drag, wheel or touch pans frames and
+ * sprockets 1:1 together with `scroll-snap` settling frames into view, and
+ * the scrollbar is hidden so the strip reads as bare film. Each frame is a
+ * §4.1 plate (`photo-plate` / `photo-plate__img` classes are applied by the
+ * FilmStrip component), and its frame-number tag glints tungsten. The strip
+ * signals its own affordance: a grab cursor, edges that fade into obsidian
+ * where the film continues past the viewport, tungsten gate ticks marking
+ * where `scroll-snap` settles a frame, and chevrons pinned to the scrollport
+ * ends while film overflows.
+ */
+.film-strip {
+  position: relative;
+  overflow-x: hidden;
+  background-color: var(--obsidian);
+  border-top: 1px solid var(--frame);
+  border-bottom: 1px solid var(--frame);
+  padding: 0.625rem 1.25rem;
+  cursor: grab;
+}
+
+/* Scrub feedback — the cursor grips while a drag is held. */
+.film-strip__scroll:active {
+  cursor: grabbing;
+}
+
+/* Edge fades — the film laps into obsidian at the scrollport ends, so the
+   strip reads as continuing past the viewport rather than stopping dead.
+   Painted above the rail (`::after` is the strip's last child), they also
+   fade the border rules and any clipped sprockets at the edges. */
+.film-strip::before,
+.film-strip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 2.5rem;
+  height: 100%;
+  pointer-events: none;
+}
+
+.film-strip::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--obsidian), transparent);
+}
+
+.film-strip::after {
+  right: 0;
+  background: linear-gradient(-90deg, var(--obsidian), transparent);
+}
+
+/* Sprocket bands — the edges of the negative. They are part of the film
+   itself, so they ride along when the strip is scrubbed. They sit in the
+   rail's own vertical padding, spanning its full content width. */
+.film-strip__rail::before,
+.film-strip__rail::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1rem;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 0.625rem,
+    var(--frame) 0.625rem,
+    var(--frame) 1.625rem,
+    transparent 1.625rem,
+    transparent 2.5rem
+  );
+  pointer-events: none;
+}
+
+.film-strip__rail::before {
+  top: 0;
+}
+
+.film-strip__rail::after {
+  bottom: 0;
+}
+
+/* Grease-pencil sleeve note — printed on the film itself, never over the
+   negative: the exposure triangle (`shutter · ƒ/aperture · ISO`) on the band
+   above the gate, body and glass (`camera · lens`) on the band below. */
+.film-strip__spec {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 1.375rem;
+  padding: 0 0.5rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.5625rem;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+  color: var(--foreground);
+  opacity: 0.75;
+  pointer-events: none;
+  transition:
+    opacity 240ms ease;
+}
+
+/* Bottom band: frame number at the film's left edge, kit note at the
+   right, one baseline apart like grease pencil on a contact sheet. */
+.film-strip__spec-bottom {
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.film-strip__title {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 1.25rem;
+}
+
+/* The scrub viewport (§3.2 "1:1 smooth scrub"): drag, wheel or touch pans
+   the rail 1:1 — frames and their sprocket bands together. No scrollbar is
+   shown and `scroll-snap` settles frames near the scrollport center; browsers
+   without `scroll-snap` simply get free 1:1 scrubbing. */
+.film-strip__scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap: x proximity;
+  scrollbar-width: none;
+}
+
+.film-strip__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* The rail: `width: max-content` makes the box — and the bands riding in
+   its vertical padding — as long as the whole film, so scrubbing never runs
+   out of sprockets. The horizontal padding is a lead-in and lead-out of film:
+   at rest the first negative parks inside the fixed enlarger gate (half the
+   scrollport minus half the frame, plus the end chevron's 0.75rem box and
+   the 1.5rem flex gap), and a full scrub parks the last negative in the
+   same gate. */
+.film-strip__rail {
+  position: relative;
+  display: flex;
+  width: max-content;
+  padding: 1.625rem calc(50% - 8.25rem);
+  gap: 1.5rem;
+  align-items: center;
+}
+
+@media (min-width: 48rem) {
+  .film-strip__rail {
+    padding-left: calc(50% - 10.25rem);
+    padding-right: calc(50% - 10.25rem);
+  }
+}
+
+@media (min-width: 64rem) {
+  .film-strip__rail {
+    padding-left: calc(50% - 12.25rem);
+    padding-right: calc(50% - 12.25rem);
+  }
+}
+
+@media (min-width: 80rem) {
+  .film-strip__rail {
+    padding-left: calc(50% - 14.25rem);
+    padding-right: calc(50% - 14.25rem);
+  }
+}
+
+/* Frames are flex columns — note band, image gate, note band — so the
+   sleeve note never crosses onto the negative. The shared §4.1 plate
+   chrome is stripped here: bare film has square-cut gates and no card
+   matting, only the hover lift and glint. Each frame is also a
+   `scroll-snap` point, so a scrub settles on its center. */
+.film-strip__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 12rem;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  scroll-snap-align: center;
+}
+
+@media (min-width: 48rem) {
+  .film-strip__frame {
+    width: 16rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .film-strip__frame {
+    width: 20rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  .film-strip__frame {
+    width: 24rem;
+  }
+}
+
+/* The gate: the negative itself, untouched at hero size — the full frame
+   width at the 4/3 Academy ratio, square-cut and flush. `overflow: hidden`
+   keeps the §4.1 hover zoom inside the gate so it never laps onto the note
+   bands; bands of film above and below carry the sleeve note, clear of the
+   1rem sprocket bands in the rail's padding. */
+.film-strip__plate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.film-strip__plate img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+/* Frame number tag (§4.1) — `▶ 14A` rides the bottom band at the film's
+   left edge, sharing its baseline with the kit note, and glints amber
+   while the frame is hovered. */
+.film-strip__tag {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  color: var(--foreground);
+  opacity: 0.8;
+  transition:
+    color 240ms ease,
+    opacity 240ms ease,
+    filter 300ms ease;
+}
+
+.film-strip__frame:hover .film-strip__tag {
+  color: var(--tungsten);
+  opacity: 1;
+  filter: drop-shadow(0 0 6px var(--tungsten-soft));
+}
+
+/* The sleeve note develops (darkroom-style) as the frame is inspected. */
+.film-strip__frame:hover .film-strip__spec {
+  opacity: 0.95;
+}
+
+/* Enlarger's gate — fixed tungsten ticks marking where `scroll-snap` settles
+   a frame. Its width tracks the frame width at each breakpoint, so the
+   ticks bracket the settled frame edge to edge. */
+.film-strip__gate {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 6rem);
+  width: 12rem;
+  border-left: 1px solid var(--tungsten-soft);
+  border-right: 1px solid var(--tungsten-soft);
+  pointer-events: none;
+  transition: border-color 240ms ease;
+}
+
+@media (min-width: 48rem) {
+  .film-strip__gate {
+    left: calc(50% - 8rem);
+    width: 16rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .film-strip__gate {
+    left: calc(50% - 10rem);
+    width: 20rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  .film-strip__gate {
+    left: calc(50% - 12rem);
+    width: 24rem;
+  }
+}
+
+.film-strip:hover .film-strip__gate {
+  border-color: var(--tungsten);
+}
+
+/* End-of-film chevrons — `position: sticky` pins each glyph to the scrollport
+   edge only while its natural position (at the rail's tip) lies beyond it,
+   i.e. exactly while film overflows on that side. The 0.75rem box they occupy
+   is fixed (not the glyph's natural advance) so the rail's lead-in padding can
+   park the first negative in the gate; `z-index: 1` rides them above frames
+   sliding underneath; the hover glint invites the scrub. */
+.film-strip__chevron-start,
+.film-strip__chevron-end {
+  position: sticky;
+  width: 0.75rem;
+  z-index: 1;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  pointer-events: none;
+  transition: color 240ms ease, opacity 240ms ease;
+}
+
+.film-strip__chevron-start {
+  left: 0.75rem;
+}
+
+.film-strip__chevron-end {
+  right: 0.75rem;
+}
+
+.film-strip:hover .film-strip__chevron-start,
+.film-strip:hover .film-strip__chevron-end {
+  color: var(--tungsten);
+  opacity: 0.85;
+}
+
+/*
  * Emulsion develop — scroll-triggered reveal (§4.3)
  * "Plates" enter the viewport undeveloped, then develop to full exposure
  * (see the Reveal component, which toggles .is-visible).

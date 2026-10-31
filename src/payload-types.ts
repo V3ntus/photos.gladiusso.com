@@ -201,7 +201,7 @@ export interface Page {
       | null;
     media?: (number | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  layout: (CallToActionBlock | ContentBlock | FilmStripBlock | MediaBlock | ArchiveBlock | FormBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -292,6 +292,26 @@ export interface Media {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Shutter speed as exposed, e.g. 1/125 or 1"
+   */
+  shutter?: string | null;
+  /**
+   * f-number without the stroke, e.g. 2.8 (rendered as ƒ/2.8)
+   */
+  aperture?: string | null;
+  /**
+   * Film speed as exposed, e.g. 400
+   */
+  iso?: number | null;
+  /**
+   * Body, e.g. Leica M6
+   */
+  camera?: string | null;
+  /**
+   * Glass, e.g. 50mm Summit
+   */
+  lens?: string | null;
   folder?: (number | null) | FolderInterface;
   updatedAt: string;
   createdAt: string;
@@ -537,6 +557,17 @@ export interface ContentBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'content';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FilmStripBlock".
+ */
+export interface FilmStripBlock {
+  title?: string | null;
+  media: (number | Media)[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'filmStrip';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1065,6 +1096,7 @@ export interface PagesSelect<T extends boolean = true> {
     | {
         cta?: T | CallToActionBlockSelect<T>;
         content?: T | ContentBlockSelect<T>;
+        filmStrip?: T | FilmStripBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
         archive?: T | ArchiveBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
@@ -1130,6 +1162,16 @@ export interface ContentBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FilmStripBlock_select".
+ */
+export interface FilmStripBlockSelect<T extends boolean = true> {
+  title?: T;
+  media?: T;
   id?: T;
   blockName?: T;
 }
@@ -1206,6 +1248,11 @@ export interface PostsSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
+  shutter?: T;
+  aperture?: T;
+  iso?: T;
+  camera?: T;
+  lens?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;

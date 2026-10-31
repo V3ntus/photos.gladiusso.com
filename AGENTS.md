@@ -1,41 +1,61 @@
 # AGENTS.md
 
-Payload CMS 3.x website template (posts/pages/media, drafts, live preview) served inside a Next.js 16 App Router app. pnpm only; Node `^22.23.4 || >=24.22.1` (`package.json` engines).
+Customized fork of the Payload **website template**: Payload 3.92 mounted inside a Next.js 16.3 App Router app, restyled as the "Halide Portfolio" darkroom site. The frontend routes are `src/app/(frontend)/**`, everything Payload generates lives in `src/app/(payload)/**`.
+
+pnpm only (`package.json` engines: Node `^22.23.4 || >=24.22.1`, pnpm `^9 || ^10 || ^11`). `README.md` documents the **upstream template**, not this fork's styling — trust `package.json`, config files, and `DESIGN.md` over it.
 
 ## Commands
 
 ```bash
-cp .env.example .env   # required; DATABASE_URL must point at a running Postgres
-pnpm install
-pnpm dev               # dev server on :3000 (admin at /admin)
-pnpm build             # next build; postbuild runs next-sitemap
-pnpm lint              # eslint . (generated payload-types.ts is ignored)
-pnpm test              # test:int then test:e2e, in that order
-
-pnpm test:int          # vitest (run, not watch); needs live Postgres + .env
-pnpm test:e2e          # playwright; auto-starts `pnpm dev` via webServer (reuseExistingServer)
-
-pnpm payload generate:types   # after any payload.config/collection/field change
-pnpm payload migrate:create <name>   # then commit; run `pnpm payload migrate` before deploy
+cp .env.example .env   # DATABASE_URL must point at a running Postgres
+pnpm install           # pnpm-workspace.yaml `allowBuilds` approves esbuild/sharp/unrs-resolver
+pnpm dev               # :3000, admin at /admin (Turbopack; next.config.ts sets turbopack.root)
+pnpm build             # also auto-runs `postbuild` (next-sitemap) via .npmrc enable-pre-post-scripts
+pnpm dev:prod          # rm -rf .next && build && `next start` — use to check production-mode behavior
+pnpm lint              # eslint . — currently broken, see below
+pnpm test              # test:int THEN test:e2e, in that order
 ```
 
-Single test: `pnpm vitest run --config ./vitest.config.mts tests/int/<file>` / `pnpm exec playwright test tests/e2e/<spec>` (add ` -t "name"` for vitest).
+There is no typecheck or format script. **`pnpm lint` currently fails in this repo** (`eslint` 9.39.5 + `eslint-config-next` via FlatCompat throws "Converting circular structure to JSON" while resolving `next/core-web-vitals`) — don't chase that error or "fix" the config. Verify a change with `pnpm build` / `pnpm dev` compile output instead. The lint script also hardcodes `eslint .`, so extra path arguments do not scope it.
+
+Match the existing style in new code: **no semicolons**, single quotes, 100 cols, trailing commas (`.prettierrc.json`). Use `pnpm exec prettier --check/--write <file>` on the files you touched only — template files are not all prettier-clean, so blanket reformatting churns the diff.
+
+Focused runs:
+
+- Single int test: `pnpm vitest run --config ./vitest.config.mts tests/int/<file>` (name filter: `-t "<name>"`).
+- Single e2e test: `pnpm test:e2e tests/e2e/<spec>` (name filter: `-g "<title>"`). Always go through the script — bare `pnpm exec playwright test <spec>` fails because the script's `NODE_OPTIONS="--import=tsx/esm"` is what lets Payload imports like `next/cache` and `../../src/payload.config.js` resolve to `.ts`.
 
 ## Environment
 
-- All scripts/tests load `.env` via dotenv; `DATABASE_URL` is Postgres (local default `postgres://postgres@127.0.0.1:5432/photos`). No CI is configured in this repo.
-- Postgres schema is pushed automatically for local dev; don't mix push and manual migrations on the same DB.
+- Every script/test loads `.env` through dotenv (`vitest.setup.ts` and `playwright.config.ts` import `dotenv/config`). `.env` is gitignored; local `DATABASE_URL=postgres://postgres@127.0.0.1:5432/photos`.
+- `CRON_SECRET` and `PREVIEW_SECRET` are still placeholder strings in `.env`, so anonymous job runs (e.g. scheduled publishing) are rejected — `src/payload.config.ts` only allows jobs for logged-in `req.user` otherwise.
+- No CI, no pre-commit/task runner in this repo.
 
-## Seeding & test data
+## Content model & generated files
 
-- No `pnpm seed` script. Seed from the admin dashboard (BeforeDashboard "seed" button) or `POST /api/seed` — both are **destructive**: they drop all collection data and re-seed, and create the demo user `demo-author@example.com` / `password`.
-- `tests/e2e` admin specs seed/cleanup their own user (`dev@payloadcms.com` / `test` via `tests/helpers/seedUser.ts`) — needs the same Postgres as the app under test.
-- `tests/e2e/frontend.e2e.spec.ts` asserts the homepage `<h1>` is exactly `Payload Website Template`; changing the home page hero text or title breaks it unless updated too.
+- Collections live in `src/collections/*`: `Posts`, `Pages` and `Users` are directories with `index.ts` (`Posts`/`Pages` also have a `hooks/` subfolder), `Media` and `Categories` are single files; globals in `src/{Header,Footer}/config.ts`; layout blocks in `src/blocks/*/config.ts`; heroes in `src/heros/config.ts`; plugins in `src/plugins/index.ts` (redirects, nested-docs, SEO, form-builder, search-over-posts).
+- After **any** collection/field/block/editor change run `pnpm payload generate:types` (commit the rewritten `src/payload-types.ts`) and `pnpm payload generate:importmap`.
+- Adding a layout block needs four touchpoints or it silently never renders: block `config.ts`, the collection's `blocks` array (`Pages` and/or `Posts`), the `blockComponents` map in `src/blocks/RenderBlocks.tsx`, and `src/components/RichText/index.tsx` (its `SerializedBlockNode` union + JSX converter) for rich-text embedding.
+- `src/app/(payload)/**` (`admin/[[...segments]]`, `api/[...slug]`, graphql) is regenerated by Payload on every `next dev`/`next build` — hand-edits there are lost. `src/payload-types.ts` is likewise overwritten by `generate:types`.
+- Postgres adapter pushes schema automatically on dev/start (`src/migrations/` is empty). For shipping, `pnpm payload migrate:create <name>` → review → commit → `pnpm payload migrate` before deploy; don't mix push mode and manual migrations on one database.
+- Visibility comes from `src/access/*` functions (`authenticatedOrPublished` is the `read` permission on Pages/Posts) plus `_status === 'published'`. `afterChange` hooks in `src/collections/*/hooks/revalidate{Page,Post}.ts` and `src/hooks/revalidateRedirects.ts` call Next's `revalidatePath`/`revalidateTag`, so published edits appear without restarting the server — and a revalidate error in the dev log is expected when the app isn't running.
 
-## Structure
+## Tests
 
-- `src/app/(frontend)` — public site (home = `pages` doc with slug `home` at `/`, plus `/posts`, `/search`, sitemaps, and `next/preview|exit-preview|seed` routes).
-- `src/app/(payload)` — generated by Payload (`api/[...slug]`, `graphql`, `admin`); do not edit generated files (they are rewritten).
-- Content model: `src/collections/*` (Posts, Pages, Media, Categories, Users) + globals Header/Footer; layout blocks in `src/blocks/*`.
-- Frontend revalidates on content change via `afterChange` hooks (`revalidatePath`); publishing is gated by `_status === 'published'` versions/drafts.
-- `DESIGN.md` is the local motion/design spec for this project's UI — follow it for animations/interactions.
+- `tests/int/api.int.spec.ts` boots the real config through `@/payload.config`, so it needs a live Postgres and writes nothing.
+- e2e specs share the app's Postgres: admin specs seed/remove their own user (`dev@payloadcms.com` / `test` via `tests/helpers/seedUser.ts`).
+- `tests/e2e/frontend.e2e.spec.ts` asserts the homepage `<h1>` and `<title>` are exactly `Payload Website Template`. Those strings also live in `src/plugins/index.ts`, `src/utilities/{generateMeta,mergeOpenGraph}.ts`, and the seed docs — keep them or update the spec in the same change.
+- e2e reuses an already-running `pnpm dev` server (`reuseExistingServer`), so a stale server on :3000 with an old build can mask your change.
+
+## Seeding
+
+- No `pnpm seed` script. Seed from the admin dashboard (BeforeDashboard "seed" button) or `POST /next/seed` — both are **destructive**: they clear all collection + global data and re-create the demo user `demo-author@example.com` / `password`.
+- Seed media is fetched from `raw.githubusercontent.com`, so seeding needs network access.
+- `src/app/(frontend)/[slug]/page.tsx` renders every page including `/` (the `pages` doc with slug `home`) and falls back to `src/endpoints/seed/home-static.ts` while the site is unseeded.
+
+## Design system
+
+- `DESIGN.md` is this project's motion/UI spec — follow it for animations and interactions, and cite its section numbers in code comments as the existing components do.
+- Timings/easings are CSS custom properties (`--dur-exit`, `--dur-enter`, `--ease-*`, `--dur-plate…`) declared in `src/app/(frontend)/globals.css`; reference the tokens instead of hard-coding durations.
+- Motion is shared through `src/components/motion/{RouteTransition,Reveal}.tsx`; custom block styling (e.g. `.film-strip*`) also goes in `globals.css`. Tailwind is v4 (`@tailwindcss/postcss`, `tailwind.config.mjs`), shadcn-style primitives in `src/components/ui/` per `components.json`.
+- Only animate `transform`/`opacity`/`filter`, and respect the `prefers-reduced-motion` guardrail already in `globals.css`.

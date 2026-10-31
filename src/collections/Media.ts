@@ -38,6 +38,46 @@ export const Media: CollectionConfig = {
         },
       }),
     },
+    {
+      name: 'shutter',
+      type: 'text',
+      label: 'Shutter',
+      admin: {
+        description: 'Shutter speed as exposed, e.g. 1/125 or 1"',
+      },
+    },
+    {
+      name: 'aperture',
+      type: 'text',
+      label: 'Aperture',
+      admin: {
+        description: 'f-number without the stroke, e.g. 2.8 (rendered as ƒ/2.8)',
+      },
+    },
+    {
+      name: 'iso',
+      type: 'number',
+      label: 'ISO',
+      admin: {
+        description: 'Film speed as exposed, e.g. 400',
+      },
+    },
+    {
+      name: 'camera',
+      type: 'text',
+      label: 'Camera',
+      admin: {
+        description: 'Body, e.g. Leica M6',
+      },
+    },
+    {
+      name: 'lens',
+      type: 'text',
+      label: 'Lens',
+      admin: {
+        description: 'Glass, e.g. 50mm Summit',
+      },
+    },
   ],
   upload: {
     // Upload to the public/media directory in Next.js making them publicly accessible even outside of Payload

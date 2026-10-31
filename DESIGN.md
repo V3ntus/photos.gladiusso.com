@@ -48,11 +48,11 @@ Our motion system avoids glossy, bouncy "tech" micro-interactions. Instead, all 
   ```
 
 ### 3.2 Continuous Film Strip Horizontal Rail ("Continuous Exposure")
-* **Visual:** On the *All Photos* screen, the featured negative rail slides continuously with an imperceptible, hypnotic slow drift unless touched or hovered.
+* **Visual:** On the *All Photos* screen, the featured negative rail sits at rest; the whole film is revealed by scrubbing through the horizontal viewport.
 * **Interaction:**
-  - Default drift: `animation: film-crawl 45s linear infinite;`
-  - On hover / mouse enter: smooth deceleration to pause (`animation-play-state: paused`).
   - Cursor drag / wheel: 1:1 smooth scrub with elastic snap-to-frame.
+  - Rest position: a lead-in and lead-out of blank film park the first negative in the gate at rest, and the last negative in the same gate at full scrub.
+  - Scrub affordance: `grab` / `grabbing` cursor, film laps into obsidian at the scrollport ends (edge fades), fixed tungsten gate ticks mark where snap settles a frame, and chevrons pinned to the scrollport edges appear only while film overflows on that side.
 
 ---
 
