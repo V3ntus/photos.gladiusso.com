@@ -10,10 +10,9 @@ import React from 'react'
 
 import { AlbumArchive } from '@/components/AlbumArchive'
 import type { AlbumCardData } from '@/components/AlbumCard'
-import { toKebabCase } from '@/utilities/toKebabCase'
 
 /**
- * Albums grid + inline rolls — media folders as photo albums.
+ * Albums grid — media folders as photo albums.
  *
  * The archive block's shape (`populateBy` collection / selection, `limit`,
  * curated order) applied to `payload-folders`, the folder collection Payload
@@ -22,31 +21,26 @@ import { toKebabCase } from '@/utilities/toKebabCase'
  *
  * Frame accounting: each album's count comes from `payload.count`, never from
  * a shared frame basket — one query with `folder: { in: ids }` returns a
- * single oldest-first window, so a hard `limit` truncates every album at once
- * and an album starved out of that window would silently disappear. Here the
- * count is the folder's truth (`totalDocs`); the paint window is per album and
- * bounded (`rollFrameLimit` frames, oldest first, matching the roll order).
- * The cover stays the first frame of that window, and an album whose true
+ * single window, so a hard `limit` truncates every album at once and an album
+ * starved out of that window would silently disappear. Here the count is the
+ * folder's truth (`totalDocs`); the cover is the album's single oldest frame
+ * (the roll's lead frame is the archive plate's photo). An album whose true
  * count is 0 is not an exhibition, so it is skipped. The media `select` keeps
- * the query off `caption` richText and the eight rendered `sizes` — only what
- * the roll paints.
+ * the query off `caption` richText and the eight rendered `sizes` — the roll
+ * on the album's own subpage (`/albums/<slug>`) paints the full roll there,
+ * bounded to nothing.
  *
  * Cards are §4.1 plates (`album-card` reuses the `photo-plate` chrome, hover
  * lift and `photo-plate__img` exposure zoom) laid out by `AlbumArchive` on the
  * archive's grid, each entering through the §4.3 emulsion develop via `Reveal`.
- * A plate links down the page to its roll (`album-<slug>` anchor); one roll
- * per album prints below the grid, in grid order.
+ * A plate routes to the album subpage, where the full roll prints.
  */
 
-/** Frames painted per roll — a window, not the whole roll. */
-const rollFrameLimit = 24
-
 /**
- * Only the fields the roll paints: the image payload (`filename` — which the
+ * Only the fields the plate paints: the image payload (`filename` — which the
  * built-in upload `url` field's afterRead hook needs to generate its path —
- * dimensions, mime, alt, `updatedAt` for the Media component's cache tag) plus
- * the five exposure fields and the order key. Keeps `caption` richText and the
- * eight rendered `sizes` out of every frame read.
+ * dimensions, mime, alt, `updatedAt` for the Media component's cache tag).
+ * Keeps `caption` richText and the eight rendered `sizes` out of every frame read.
  */
 const frameSelect = {
   alt: true,
@@ -56,13 +50,7 @@ const frameSelect = {
   width: true,
   height: true,
   updatedAt: true,
-  // Roll order key and a required `Media` field — the roll is oldest-first.
   createdAt: true,
-  shutter: true,
-  aperture: true,
-  iso: true,
-  camera: true,
-  lens: true,
 } as const
 
 /**
@@ -78,17 +66,11 @@ const toAlbumDoc = (selection: unknown): AlbumDoc | null => {
   return typeof unwrapped === 'object' && unwrapped !== null ? (unwrapped as AlbumDoc) : null
 }
 
-/** `album-<slug>` when the folder has one, else the name in kebab case. */
-const albumAnchor = (album: AlbumDoc): string =>
-  `album-${album.slug?.trim() || toKebabCase(album.name) || album.id}`
-
-/** One plate + its painted window, exactly what the queries above yield. */
+/** One plate: the folder, its cover and its true count — what `AlbumArchive` renders. */
 type AlbumCard = {
   album: AlbumDoc
-  anchor: string
   cover: MediaDoc | null
   frames: number
-  framesWindow: MediaDoc[]
 }
 
 type Props = AlbumsBlockProps & {
@@ -149,7 +131,9 @@ export const AlbumsBlock: React.FC<Props> = async (props) => {
           payload.find({
             collection: 'media',
             depth: 0,
-            limit: rollFrameLimit,
+            // Only the cover: the album's single oldest frame, the same
+            // frame the subpage's roll leads with.
+            limit: 1,
             // At depth 0 the folder stays an id, which is the album key we
             // filter on, and `select` narrows the row to the painted fields.
             overrideAccess: false,
@@ -168,10 +152,8 @@ export const AlbumsBlock: React.FC<Props> = async (props) => {
 
         return {
           album,
-          anchor: albumAnchor(album),
           cover: painted.docs.length > 0 ? painted.docs[0] : null,
           frames: counted.totalDocs,
-          framesWindow: painted.docs,
         }
       }),
     )

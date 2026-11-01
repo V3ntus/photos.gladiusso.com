@@ -2,7 +2,6 @@ import { cn } from '@/utilities/ui'
 import React from 'react'
 
 import { AlbumCard, AlbumCardData } from '@/components/AlbumCard'
-import { AlbumRoll } from '@/components/AlbumRoll'
 import { Reveal } from '@/components/motion/Reveal'
 
 export type Props = {
@@ -10,11 +9,9 @@ export type Props = {
 }
 
 /**
- * Album archive — one §4.1 plate per folder on the archive grid, followed by
- * every album's roll printed in grid order below it. A plate's `album-<slug>`
- * anchor links straight down to its roll; rolls are always in the document,
- * so the jump lands on content that is already there (and develops in through
- * the roll's own `Reveal` on first entry).
+ * Album archive — one §4.1 plate per folder on the archive grid. A plate
+ * routes to the album's own subpage (`/albums/<slug>`), where the full roll
+ * prints (§4.3); nothing roll-related lives in the archive document itself.
  */
 export const AlbumArchive: React.FC<Props> = ({ albums }) => {
   return (
@@ -34,14 +31,6 @@ export const AlbumArchive: React.FC<Props> = ({ albums }) => {
           })}
         </div>
       </div>
-
-      {albums && albums.length > 0 && (
-        <div className="album-rolls">
-          {albums.map((roll, index) => (
-            <AlbumRoll key={roll.album?.id ?? index} doc={roll} priority={index === 0} />
-          ))}
-        </div>
-      )}
     </div>
   )
 }

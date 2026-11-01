@@ -1,22 +1,41 @@
+'use client'
 import { cn } from '@/utilities/ui'
-import React from 'react'
+import NextImage from 'next/image'
+import React, { useCallback, useState } from 'react'
 
-import type { FolderInterface as AlbumDoc, Media as MediaDoc } from '@/payload-types'
+import type { Media as MediaDoc } from '@/payload-types'
 
-import { Media } from '@/components/Media'
+import { getMediaUrl } from '@/utilities/getMediaUrl'
+import { placeholderBlur } from '@/components/Media/ImageMedia'
 import { Reveal } from '@/components/motion/Reveal'
+import { Loupe } from '@/components/Loupe'
 
-export type AlbumRollData = {
-  album?: AlbumDoc
-  /** `album-<slug>` id the plate above links to. */
-  anchor?: string
-  /** True frame count of the album. */
-  frames?: number | null
-  /** Bounded paint window, oldest first. */
-  framesWindow?: MediaDoc[] | null
+/**
+ * Roll frame — the serializable slice of a media doc the roll and loupe paint:
+ * the image payload (`filename`, which the built-in upload `url` field's
+ * afterRead hook needs to generate its path, dimensions, mime, alt, `updatedAt`
+ * cache tag) plus the five exposure fields. Full albums are long, so the
+ * subpage maps every frame down to exactly this and nothing more.
+ */
+export type RollFrame = Pick<
+  MediaDoc,
+  'id' | 'alt' | 'filename' | 'mimeType' | 'url' | 'width' | 'height' | 'updatedAt'
+> & {
+  shutter?: string | null
+  /** Stored without the stroke — painted as `ƒ/2.8`. */
+  aperture?: string | null
+  iso?: number | null
+  camera?: string | null
+  lens?: string | null
 }
 
-/** Widths hint answering the roll gate width in `globals.css`. */
+export type AlbumRollData = {
+  name?: string | null
+  description?: string | null
+  frames?: RollFrame[] | null
+}
+
+/** Widths to answer at — the roll gate is capped at 56rem in globals.css. */
 const rollImageSize = '(max-width: 64rem) 100vw, 56rem'
 
 /**
@@ -24,7 +43,7 @@ const rollImageSize = '(max-width: 64rem) 100vw, 56rem'
  * aperture (stored without the stroke, painted `ƒ/2.8`), film speed, body and
  * glass. Present fields only; an unrecorded exposure paints no band.
  */
-const exposureBand = (frame: MediaDoc): string => {
+const exposureBand = (frame: RollFrame): string => {
   const parts: string[] = []
 
   if (frame.shutter) parts.push(frame.shutter)
@@ -38,58 +57,65 @@ const exposureBand = (frame: MediaDoc): string => {
 
 /**
  * Album roll — one folder printed full size in a single column (§4.3 editorial
- * scroll), the frames stacked under the grid the plates link down to. The
- * whole roll is one `Reveal` block (one observer per roll, not per frame), the
- * roll window may be shorter than the album when frames past it weren't
- * painted (`NN of MM frames`), and every frame carries the §4.1 `photo-plate`
- * chrome with the lip left off — nothing to click here, only plate hover.
+ * scroll) on the album's subpage. Each frame is the §4.1 `photo-plate` chrome
+ * (hover lift + exposure zoom), now clickable: a pointer down on a frame
+ * throws it onto the §4.2 loupe — the full-resolution negative enlarged under
+ * a brass magnifier. Nothing to link here; the loupe owns the click.
  */
 export const AlbumRoll: React.FC<{
   className?: string
   doc: AlbumRollData
-  /** First roll's lead frame is above the fold's LCP candidate: fetch eagerly. */
+  /** Lead frame is above the fold's LCP candidate: fetch eagerly. */
   priority?: boolean
 }> = ({ className, doc, priority = false }) => {
-  const { album, anchor, frames, framesWindow } = doc
-  const { name } = album || {}
+  const { frames, name } = doc
+  const [loupeIndex, setLoupeIndex] = useState<number | null>(null)
 
-  if (!name || !anchor) return null
+  const openLoupe = useCallback((index: number) => setLoupeIndex(index), [])
+  const closeLoupe = useCallback(() => setLoupeIndex(null), [])
 
-  const painted = framesWindow?.length ?? 0
-  const total = frames ?? painted
-
-  const countLabel =
-    total > painted ? `${painted} of ${total} frames` : total === 1 ? '1 frame' : `${total} frames`
+  if (!name || !frames || frames.length === 0) return null
 
   return (
-    <section className={cn('album-roll', className)} id={anchor}>
-      <Reveal className="album-roll__gate">
-        <header className="album-roll__header">
-          <h2 className="album-roll__name">{name}</h2>
-          <p className="album-roll__count">{countLabel}</p>
-        </header>
-        {framesWindow && painted > 0
-          ? framesWindow.map((frame, index) => {
-              const exposure = exposureBand(frame)
-              const eager = priority && index === 0
+    <React.Fragment>
+      <section className={cn('album-roll', className)} id="album-roll" aria-label={name}>
+        <Reveal className="album-roll__gate">
+          {frames.map((frame, index) => {
+            const exposure = exposureBand(frame)
+            const eager = priority && index === 0
 
-              return (
-                <figure className="album-roll__frame photo-plate" key={frame.id}>
-                  <Media
+            return (
+              <figure className="album-roll__frame photo-plate" key={frame.id}>
+                <button
+                  aria-label={`Enlarge frame: ${frame.alt || `frame ${index + 1}`}`}
+                  className="album-roll__open"
+                  onClick={() => openLoupe(index)}
+                  type="button"
+                >
+                  <NextImage
                     // Sizing lives on `.album-roll__img` — the easel cap in
                     // globals.css owns width/height so portrait frames fit.
-                    imgClassName="photo-plate__img album-roll__img"
+                    alt={frame.alt || ''}
+                    className="album-roll__img"
+                    height={frame.height ?? undefined}
                     loading={eager ? undefined : 'lazy'}
+                    placeholder="blur"
+                    blurDataURL={placeholderBlur}
                     priority={eager}
-                    resource={frame}
-                    size={rollImageSize}
+                    quality={100}
+                    sizes={rollImageSize}
+                    src={getMediaUrl(frame.url, frame.updatedAt)}
+                    width={frame.width ?? undefined}
                   />
-                  {exposure && <figcaption className="album-roll__exif">{exposure}</figcaption>}
-                </figure>
-              )
-            })
-          : null}
-      </Reveal>
-    </section>
+                </button>
+                {exposure && <figcaption className="album-roll__exif">{exposure}</figcaption>}
+              </figure>
+            )
+          })}
+        </Reveal>
+      </section>
+
+      {loupeIndex !== null && <Loupe close={closeLoupe} frames={frames} start={loupeIndex} />}
+    </React.Fragment>
   )
 }

@@ -262,6 +262,14 @@ html[data-theme='light'] {
   --frame: #d4d0c8;
 }
 
+/* The loupe forces the darkroom regardless of the page's theme (§4.2), so the
+   attribute-scoped block needs the enlarger tokens too — without them the
+   portaled table would inherit a daylit page's cream `--obsidian`. */
+[data-theme='dark'] {
+  --obsidian: #0d0e11;
+  --frame: #26272b;
+}
+
 /* Deep obsidian wash beneath every surface (§3.1) */
 body {
   background-color: var(--obsidian);
@@ -669,27 +677,20 @@ body {
 }
 
 /*
- * Album rolls — the plates link down to whole rolls printed under the grid
- * (single-column §4.3 editorial scroll). Each roll is sectioned by its
- * `album-<slug>` anchor and develops as ONE emulsion block through the shared
- * `Reveal` (one observer per roll, not per frame) — opacity over blur only,
- * so a jump from a plate lands on content that is already in the document.
- * Frames reuse the §4.1 `photo-plate` chrome minus its pointer cursor —
- * there is nothing to open, the plate above was the click — and sit on their
- * grease-pencil exposure band (shutter, `ƒ/aperture`, ISO, body, glass),
- * present fields only. All motion stays on transform/opacity/filter; the
- * anchor holds `scroll-margin-top` clear of the fixed header.
+ * Album rolls — whole rolls printed on the album's subpage (/albums/<slug>),
+ * which the archive's plates route to (§4.3 editorial scroll). A roll develops
+ * as ONE emulsion block through the shared `Reveal` (one observer per roll,
+ * not per frame) — opacity over blur only. Frames reuse the §4.1 `photo-plate`
+ * chrome with its pointer cursor on, because a frame click has a target now:
+ * the §4.2 loupe, which enlarges the full-resolution negative under a brass
+ * ring riding the cursor at a damped lag, the grain inside its aperture moving
+ * inversely with ‹ ›/arrow-key paging and an `8X LOUPE` reticle breathing over
+ * the ring. All motion stays on transform/opacity/filter. The section anchor
+ * (`#album-roll`, destination of the header's scroll cue) holds
+ * `scroll-margin-top` clear of the fixed header.
  */
 .album-roll {
   scroll-margin-top: 6rem;
-}
-
-.album-rolls {
-  margin-top: 4rem;
-}
-
-.album-roll + .album-roll {
-  margin-top: 2.75rem;
 }
 
 .album-roll__gate {
@@ -725,8 +726,24 @@ body {
   text-transform: uppercase;
 }
 
+/*
+ * Frame click target — the plate's gate is a real <button>, reset to bare
+ * contents so the plate paints exactly as before but with the enlarger's
+ * zoom-in cursor (the §4.2 loupe owns the click).
+ */
+.album-roll__open {
+  appearance: none;
+  background: none;
+  border: 0;
+  cursor: zoom-in;
+  display: block;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
 .album-roll__frame {
-  cursor: default;
+  cursor: zoom-in;
   margin: 0 0 2.5rem;
 }
 
@@ -756,6 +773,341 @@ body {
   opacity: 0.85;
   padding: 0.75rem 1rem 0.875rem;
   text-transform: uppercase;
+}
+
+/*
+ * Album subpage — the plate's destination. The header is a darkroom logbook
+ * line: step back up the archive, album name set large in the header face,
+ * the frame total on the grease-pencil band, and the folder's own lines as
+ * an intro note. The roll prints below at full width.
+ */
+.album-page__header {
+  margin-bottom: 2.75rem;
+  text-align: center;
+}
+
+.album-page__back {
+  color: var(--muted-foreground);
+  display: inline-block;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  transition:
+    color 240ms ease,
+    opacity 240ms ease;
+}
+
+.album-page__back:hover {
+  color: var(--tungsten);
+  opacity: 1;
+}
+
+.album-page__title {
+  color: var(--foreground);
+  font-family: var(--font-header, serif);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.album-page__meta {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  margin: 0.75rem 0 0;
+  opacity: 0.85;
+  text-transform: uppercase;
+}
+
+.album-page__intro {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin: 1rem auto 0;
+  max-width: 38rem;
+  opacity: 0.85;
+}
+
+/*
+ * Scroll cue — the bobbing invitation to run the roll, seated under the
+ * header. Chevron (§4.3 language) glides the page to the first frame; text
+ * reset bare so the chevron paints loose of any type scale. Hover lights
+ * tungsten like the loupe tassels; the bob is transform/opacity only and the
+ * `prefers-reduced-motion` guardrail stills it (§5).
+ */
+.album-scroll-cue {
+  appearance: none;
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  padding: 0.625rem 1rem;
+  transition: color 240ms ease;
+}
+
+.album-scroll-cue:hover {
+  color: var(--tungsten);
+}
+
+.album-scroll-cue__chev {
+  animation: cue-bob 2.4s ease-in-out infinite;
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+@keyframes cue-bob {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(6px);
+  }
+}
+
+/*
+ * The loupe — §4.2 click-to-enlarge. An obsidian light table takes the
+ * enlarged negative in through the §4.3 emulsion develop; the brass ring is
+ * positioned fixed and swept by transform alone (the rAF lerp writes only
+ * transform / background-position), so it never relayouts the page. The
+ * reticle tag breathes on a 2s cycle; the reduced-motion guardrail zeroes it.
+ */
+.loupe {
+  align-items: center;
+  background-color: color-mix(in srgb, var(--obsidian) 94%, transparent);
+  display: flex;
+  justify-content: center;
+  inset: 0;
+  position: fixed;
+  z-index: 100;
+  animation: loupe-fade var(--dur-enter) var(--ease-enter) both;
+  cursor: zoom-out;
+}
+
+@keyframes loupe-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Each thrown frame (and each paged-to frame) develops onto the table. */
+.loupe__stage {
+  animation: emulsion-develop var(--dur-enter) var(--ease-enter) both;
+  margin: 0;
+  max-width: 100vw;
+}
+
+.loupe__plate {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+  max-height: 90vh;
+  max-width: 100%;
+  width: auto;
+}
+
+.loupe__exif {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  padding: 0.75rem 1rem 0.875rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/*
+ * Brass ring — pointer instrument only (matched in the component via
+ * `pointer: fine` moves; on touch the chevrons page instead). Hidden until
+ * the cursor seats over the negative.
+ */
+.loupe__ring {
+  border: 2px solid var(--tungsten);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--obsidian) 65%, transparent),
+    inset 0 0 1.5rem rgba(0, 0, 0, 0.45),
+    0 0.5rem 2rem rgba(0, 0, 0, 0.6);
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  transform: translate3d(-200px, -200px, 0);
+  transition: opacity 240ms ease;
+  will-change: transform;
+  z-index: 110;
+}
+
+.loupe__ring.is-seated {
+  opacity: 1;
+}
+
+/* Aperture — the magnified grain paints inside the brass rim. */
+.loupe__aperture {
+  border-radius: 50%;
+  inset: 5px;
+  overflow: hidden;
+  position: absolute;
+}
+
+/* Crosshair & reticle ring lines, faint amber over the aperture. */
+.loupe__aperture::before,
+.loupe__aperture::after {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--tungsten-soft) 46%,
+    var(--tungsten-soft) 54%,
+    transparent
+  );
+  content: '';
+  height: 1px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: calc(50% - 1px);
+}
+
+.loupe__aperture::after {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--tungsten-soft) 46%,
+    var(--tungsten-soft) 54%,
+    transparent
+  );
+  bottom: 0;
+  height: auto;
+  left: calc(50% - 1px);
+  right: auto;
+  top: 0;
+  width: 1px;
+}
+
+/* The grease-pencil tag — `8X LOUPE` on a soft 2-second breath (§4.2). */
+.loupe__tag {
+  bottom: -1.75rem;
+  color: var(--tungsten);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.625rem;
+  left: 50%;
+  letter-spacing: 0.2em;
+  padding: 0.25rem 0.5rem;
+  position: absolute;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  animation: loupe-breathe 2s ease-in-out infinite;
+}
+
+@keyframes loupe-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Paging tassels — ‹ › and the counter, clear of the negative's edges. */
+.loupe__pager {
+  appearance: none;
+  background: none;
+  border: 1px solid var(--frame);
+  border-radius: 50%;
+  color: var(--foreground);
+  cursor: pointer;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 1.5rem;
+  height: 3rem;
+  line-height: 1;
+  opacity: 0.7;
+  padding: 0;
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  transition:
+    color 240ms ease,
+    border-color 240ms ease,
+    opacity 240ms ease;
+  width: 3rem;
+  z-index: 110;
+}
+
+.loupe__pager:hover {
+  border-color: var(--tungsten-soft);
+  color: var(--tungsten);
+  opacity: 1;
+}
+
+.loupe__pager--prev {
+  left: 1.25rem;
+}
+
+.loupe__pager--next {
+  right: 1.25rem;
+}
+
+.loupe__counter {
+  bottom: 1.25rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  left: 50%;
+  letter-spacing: 0.05em;
+  margin: 0;
+  position: fixed;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  z-index: 110;
+}
+
+.loupe__close {
+  appearance: none;
+  background: none;
+  border: 1px solid var(--frame);
+  border-radius: 50%;
+  color: var(--foreground);
+  cursor: pointer;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875rem;
+  height: 2.25rem;
+  line-height: 1;
+  opacity: 0.7;
+  padding: 0;
+  position: fixed;
+  right: 1.25rem;
+  top: 1.25rem;
+  transition:
+    color 240ms ease,
+    border-color 240ms ease,
+    opacity 240ms ease;
+  width: 2.25rem;
+  z-index: 110;
+}
+
+.loupe__close:hover {
+  border-color: var(--tungsten-soft);
+  color: var(--tungsten);
+  opacity: 1;
 }
 
 /*

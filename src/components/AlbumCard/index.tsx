@@ -10,8 +10,8 @@ import { Media } from '@/components/Media'
 
 export type AlbumCardData = {
   album?: AlbumDoc
-  /** `album-<slug>` id of this album's roll further down the page. */
-  anchor?: string
+  /** Route to the album's subpage; derived from the slug when not given. */
+  href?: string
   cover?: MediaDoc | null
   frames?: number | null
 }
@@ -22,8 +22,8 @@ export type AlbumCardData = {
  * lead frame fills the gate, the album name sets under it, and the frame
  * count rides the grease-pencil band (`NN FRAMES`) that glints tungsten while
  * the plate is hovered, echoing the film strip's frame tag (§3.2). The plate
- * links down the page to the album's roll via `useClickableCard` + `Link`, as
- * the post card links to its route.
+ * routes to the album's own subpage via `useClickableCard` + `Link`, as the
+ * post card links to its route; the full roll prints there.
  */
 export const AlbumCard: React.FC<{
   className?: string
@@ -34,8 +34,9 @@ export const AlbumCard: React.FC<{
 
   if (!doc) return null
 
-  const { album, anchor, cover, frames } = doc
-  const { name, description } = album || {}
+  const { album, href, cover, frames } = doc
+  const { name, description, slug } = album || {}
+  const to = href ?? (slug ? `/albums/${slug}` : undefined)
 
   return (
     <article className={cn('photo-plate', className)} ref={card.ref}>
@@ -53,10 +54,10 @@ export const AlbumCard: React.FC<{
       </div>
       <div className="p-4">
         {name &&
-          (anchor ? (
+          (to ? (
             <div className="prose">
               <h3>
-                <Link className="not-prose" href={`#${anchor}`} ref={link.ref}>
+                <Link className="not-prose" href={to} ref={link.ref}>
                   {name}
                 </Link>
               </h3>
