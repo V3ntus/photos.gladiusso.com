@@ -46,6 +46,7 @@ export const HighImpactHero: React.FC<Page['hero']> = ({ links, media, richText 
       {/* Copy overlays the print from md up; stacks below the film on mobile.
           The obsidian band keeps white type readable on light-themed pages. */}
       <div className="container relative z-10 bg-[var(--obsidian)] py-8 mt-32 md:mb-8 md:bg-transparent md:py-0">
+        <span className="font-mono text-muted-foreground text-xs">CURATED ARCHIVES - PERMANENT INDEX</span>
         <div className="max-w-[36.5rem]">
           {richText && <RichText className="mb-6" data={richText} enableGutter={false} />}
           {Array.isArray(links) && links.length > 0 && (
