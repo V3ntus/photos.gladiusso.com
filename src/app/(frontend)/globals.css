@@ -1111,6 +1111,28 @@ body {
 }
 
 /*
+ * Impact hero scrim + gradient fallback (High/Medium impact heroes).
+ * Overlaid hero copy sits on a darkroom scrim that fades the image's lower
+ * edge into obsidian (#0d0e11 per §3.1) so white type stays legible. With no
+ * media in the gate, the frame falls back to a tungsten-tinged obsidian
+ * gradient — shadow warming toward the enlarger lamp at the top edge.
+ */
+.hero-scrim {
+  background: linear-gradient(
+    to top,
+    rgba(13, 14, 17, 0.88) 0%,
+    rgba(13, 14, 17, 0.45) 40%,
+    rgba(13, 14, 17, 0.08) 100%
+  );
+}
+
+.hero-media-fallback {
+  background:
+    radial-gradient(120% 100% at 85% 0%, var(--tungsten-faint), transparent 55%),
+    linear-gradient(160deg, var(--frame) 0%, var(--obsidian) 70%);
+}
+
+/*
  * Accessibility guardrail (§5) — disable all motion for users who prefer
  * reduced motion. Duration is clamped, not removed, so reveals still
  * complete (content becomes visible) instead of getting stuck.
