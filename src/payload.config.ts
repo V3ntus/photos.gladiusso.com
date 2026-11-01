@@ -9,6 +9,11 @@ import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { Users } from './collections/Users'
+
+import { anyone } from './access/anyone'
+import { authenticated } from './access/authenticated'
+import { slugField } from 'payload'
+
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
@@ -63,6 +68,44 @@ export default buildConfig({
     },
   }),
   collections: [Pages, Posts, Media, Categories, Users],
+  // Media folders double as photo albums, so the hidden `payload-folders`
+  // collection Payload builds for `folders: true` in src/collections/Media.ts
+  // is widened here: `read: anyone` lets the albums grid render for anonymous
+  // visitors (folder docs default to logged-in-only access), the `slug` is
+  // auto-generated from the folder `name` so an album has a stable URL, and
+  // `description` carries the darkroom note printed under the cover. `debug`
+  // un-hides the collection in /admin, which is what makes that copy editable.
+  folders: {
+    debug: true,
+    collectionOverrides: [
+      ({ collection }) => ({
+        ...collection,
+        access: {
+          create: authenticated,
+          delete: authenticated,
+          read: anyone,
+          update: authenticated,
+        },
+        fields: [
+          ...collection.fields,
+          slugField({
+            position: 'sidebar',
+            required: false,
+            useAsSlug: 'name',
+          }),
+          {
+            name: 'description',
+            type: 'textarea',
+            label: 'Album Note',
+            admin: {
+              description: 'One or two lines shown beneath the album cover.',
+              position: 'sidebar',
+            },
+          },
+        ],
+      }),
+    ],
+  },
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
   plugins,

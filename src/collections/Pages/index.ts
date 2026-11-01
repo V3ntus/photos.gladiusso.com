@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
+import { Albums } from '../../blocks/AlbumsBlock/config'
 import { Archive } from '../../blocks/ArchiveBlock/config'
 import { CallToAction } from '../../blocks/CallToAction/config'
 import { Content } from '../../blocks/Content/config'
@@ -73,7 +74,7 @@ export const Pages: CollectionConfig<'pages'> = {
             {
               name: 'layout',
               type: 'blocks',
-              blocks: [CallToAction, Content, FilmStrip, MediaBlock, Archive, FormBlock],
+              blocks: [CallToAction, Content, FilmStrip, MediaBlock, Archive, Albums, FormBlock],
               required: true,
               admin: {
                 initCollapsed: true,

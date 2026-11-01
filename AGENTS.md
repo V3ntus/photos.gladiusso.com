@@ -59,3 +59,13 @@ Focused runs:
 - Timings/easings are CSS custom properties (`--dur-exit`, `--dur-enter`, `--ease-*`, `--dur-plate…`) declared in `src/app/(frontend)/globals.css`; reference the tokens instead of hard-coding durations.
 - Motion is shared through `src/components/motion/{RouteTransition,Reveal}.tsx`; custom block styling (e.g. `.film-strip*`) also goes in `globals.css`. Tailwind is v4 (`@tailwindcss/postcss`, `tailwind.config.mjs`), shadcn-style primitives in `src/components/ui/` per `components.json`.
 - Only animate `transform`/`opacity`/`filter`, and respect the `prefers-reduced-motion` guardrail already in `globals.css`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -201,7 +201,7 @@ export interface Page {
       | null;
     media?: (number | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | FilmStripBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  layout: (CallToActionBlock | ContentBlock | FilmStripBlock | MediaBlock | ArchiveBlock | AlbumsBlock | FormBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -406,6 +406,15 @@ export interface FolderInterface {
     totalDocs?: number;
   };
   folderType?: 'media'[] | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug?: string | null;
+  /**
+   * One or two lines shown beneath the album cover.
+   */
+  description?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -599,6 +608,25 @@ export interface ArchiveBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'archive';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AlbumsBlock".
+ */
+export interface AlbumsBlock {
+  title?: string | null;
+  populateBy?: ('collection' | 'selection') | null;
+  sort?: ('name' | '-createdAt' | 'createdAt' | '-updatedAt') | null;
+  limit?: number | null;
+  selectedAlbums?:
+    | {
+        relationTo: 'payload-folders';
+        value: number | FolderInterface;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'albums';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1099,6 +1127,7 @@ export interface PagesSelect<T extends boolean = true> {
         filmStrip?: T | FilmStripBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
         archive?: T | ArchiveBlockSelect<T>;
+        albums?: T | AlbumsBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
       };
   meta?:
@@ -1196,6 +1225,19 @@ export interface ArchiveBlockSelect<T extends boolean = true> {
   categories?: T;
   limit?: T;
   selectedDocs?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AlbumsBlock_select".
+ */
+export interface AlbumsBlockSelect<T extends boolean = true> {
+  title?: T;
+  populateBy?: T;
+  sort?: T;
+  limit?: T;
+  selectedAlbums?: T;
   id?: T;
   blockName?: T;
 }
@@ -1624,6 +1666,9 @@ export interface PayloadFoldersSelect<T extends boolean = true> {
   folder?: T;
   documentsAndFolders?: T;
   folderType?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
   updatedAt?: T;
   createdAt?: T;
 }

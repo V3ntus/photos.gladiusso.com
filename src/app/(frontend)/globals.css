@@ -300,11 +300,7 @@ body::after {
 
 body::after {
   content: '';
-  background: radial-gradient(
-    60rem 40rem at 85% 5%,
-    var(--tungsten-faint),
-    transparent 62%
-  );
+  background: radial-gradient(60rem 40rem at 85% 5%, var(--tungsten-faint), transparent 62%);
   animation: darkroom-amber-breathe 14s ease-in-out infinite;
   will-change: opacity, transform;
 }
@@ -342,8 +338,7 @@ body::after {
 }
 
 .lamp-dip {
-  animation: lamp-dip calc(var(--dur-exit) + var(--dur-enter)) ease
-    both;
+  animation: lamp-dip calc(var(--dur-exit) + var(--dur-enter)) ease both;
 }
 
 /* Trough lands exactly at the 280ms exit point, then recovers while the
@@ -363,7 +358,9 @@ body::after {
   }
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-header), serif;
   text-transform: uppercase;
 }
@@ -617,6 +614,151 @@ body {
 }
 
 /*
+ * Albums grid — one plate per folder of negatives.
+ *
+ * Cards reuse the §4.1 `photo-plate` chrome, hover lift and `photo-plate__img`
+ * exposure zoom (see AlbumCard); only the album's own typography is added here.
+ * The `NN FRAMES` band is the frame-number tag of §4.1 — mono, tabular, and it
+ * glints tungsten while the plate is inspected. The note under it is the grease
+ * pencil line on a print sleeve (§3.2 sleeve notes), kept quiet so the negative
+ * stays the lead.
+ */
+.albums-grid__title {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 1.25rem;
+}
+
+.album-card__frames {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  opacity: 0.8;
+  transition:
+    color 240ms ease,
+    opacity 240ms ease,
+    filter 300ms ease;
+}
+
+.photo-plate:hover .album-card__frames {
+  color: var(--tungsten);
+  opacity: 1;
+  filter: drop-shadow(0 0 6px var(--tungsten-soft));
+}
+
+.album-card__note {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  opacity: 0.85;
+  transition:
+    color 240ms ease,
+    opacity 240ms ease;
+}
+
+.photo-plate:hover .album-card__note {
+  color: var(--foreground);
+  opacity: 1;
+}
+
+/*
+ * Album rolls — the plates link down to whole rolls printed under the grid
+ * (single-column §4.3 editorial scroll). Each roll is sectioned by its
+ * `album-<slug>` anchor and develops as ONE emulsion block through the shared
+ * `Reveal` (one observer per roll, not per frame) — opacity over blur only,
+ * so a jump from a plate lands on content that is already in the document.
+ * Frames reuse the §4.1 `photo-plate` chrome minus its pointer cursor —
+ * there is nothing to open, the plate above was the click — and sit on their
+ * grease-pencil exposure band (shutter, `ƒ/aperture`, ISO, body, glass),
+ * present fields only. All motion stays on transform/opacity/filter; the
+ * anchor holds `scroll-margin-top` clear of the fixed header.
+ */
+.album-roll {
+  scroll-margin-top: 6rem;
+}
+
+.album-rolls {
+  margin-top: 4rem;
+}
+
+.album-roll + .album-roll {
+  margin-top: 2.75rem;
+}
+
+.album-roll__gate {
+  margin-inline: auto;
+  max-width: 56rem;
+}
+
+.album-roll__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1.75rem;
+}
+
+.album-roll__name {
+  color: var(--foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.album-roll__count {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  margin: 0;
+  opacity: 0.85;
+  text-transform: uppercase;
+}
+
+.album-roll__frame {
+  cursor: default;
+  margin: 0 0 2.5rem;
+}
+
+/*
+ * Enlarger easel — a full-width 4000px-tall portrait would print taller than
+ * the viewport, so tall frames are fitted to an easel height instead and
+ * centered on the plate's background (letterboxing) while landscape frames
+ * still fill the gate. The intrinsic ratio comes from the img's width/height
+ * attributes, so no explicit ratio is needed here. Hover zoom (§4.1) still
+ * reads because the frame is capped, not cropped.
+ */
+.album-roll__img {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+  max-height: min(48rem, 85vh);
+  max-width: 100%;
+  width: auto;
+}
+
+.album-roll__exif {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  padding: 0.75rem 1rem 0.875rem;
+  text-transform: uppercase;
+}
+
+/*
  * Continuous film strip — featured negative rail (§3.2)
  * Selected negatives sit on an obsidian strip; the strip is a horizontal
  * scrub viewport (§3.2): cursor drag, wheel or touch pans frames and
@@ -714,8 +856,7 @@ body {
   color: var(--foreground);
   opacity: 0.75;
   pointer-events: none;
-  transition:
-    opacity 240ms ease;
+  transition: opacity 240ms ease;
 }
 
 /* Bottom band: frame number at the film's left edge, kit note at the
@@ -922,7 +1063,9 @@ body {
   color: var(--muted-foreground);
   opacity: 0.5;
   pointer-events: none;
-  transition: color 240ms ease, opacity 240ms ease;
+  transition:
+    color 240ms ease,
+    opacity 240ms ease;
 }
 
 .film-strip__chevron-start {
