@@ -48,7 +48,6 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
           loading="eager"
           priority="high"
           variant="square_alt"
-          className="invert dark:invert-0"
         />
       </Link>
 
@@ -57,10 +56,6 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
       <span className="nav-item invisible md:visible">INDEX // CATALOG</span>
 
       <HeaderNav data={data} />
-
-      {/*<div className="dr-footer">*/}
-      {/*  <ThemeSelector />*/}
-      {/*</div>*/}
     </aside>
   )
 }

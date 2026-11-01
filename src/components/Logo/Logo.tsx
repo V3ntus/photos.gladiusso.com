@@ -17,14 +17,14 @@ export const Logo = (props: Props) => {
   function getImgSrc(): string {
     switch (variant) {
       case 'footer':
-        return '/footer.png'
+        return '/footer.svg'
       case 'header':
         return '/header.png';
       case 'square_alt':
-        return '/square_alt.png';
+        return '/square_alt.svg';
       case 'square':
       default:
-        return '/square.png';
+        return '/square.svg';
     }
   }
 

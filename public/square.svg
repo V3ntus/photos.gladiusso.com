@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480" role="img" aria-labelledby="t d">
+  <title id="t">V3NTUS ASCII matrix</title>
+  <desc id="d">The handle V3NTUS as six rows of 7-bit ASCII: a filled square is 1, a small dim square is 0.</desc>
+  <rect width="480" height="480" fill="#0C0C0C"/>
+  <g shape-rendering="crispEdges">
+    <path fill="#F0F0F0" d="M79 103h34v34h-34zM175 103h34v34h-34zM271 103h34v34h-34zM319 103h34v34h-34zM127 151h34v34h-34zM175 151h34v34h-34zM319 151h34v34h-34zM367 151h34v34h-34zM79 199h34v34h-34zM223 199h34v34h-34zM271 199h34v34h-34zM319 199h34v34h-34zM79 247h34v34h-34zM175 247h34v34h-34zM271 247h34v34h-34zM79 295h34v34h-34zM175 295h34v34h-34zM271 295h34v34h-34zM367 295h34v34h-34zM79 343h34v34h-34zM175 343h34v34h-34zM319 343h34v34h-34zM367 343h34v34h-34z"/>
+    <path fill="#6E6E6E" d="M140 116h8v8h-8zM236 116h8v8h-8zM380 116h8v8h-8zM92 164h8v8h-8zM236 164h8v8h-8zM284 164h8v8h-8zM140 212h8v8h-8zM188 212h8v8h-8zM380 212h8v8h-8zM140 260h8v8h-8zM236 260h8v8h-8zM332 260h8v8h-8zM380 260h8v8h-8zM140 308h8v8h-8zM236 308h8v8h-8zM332 308h8v8h-8zM140 356h8v8h-8zM236 356h8v8h-8zM284 356h8v8h-8z"/>
+  </g>
+</svg>
