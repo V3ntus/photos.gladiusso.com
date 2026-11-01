@@ -23,7 +23,7 @@ export async function Footer() {
               return <CMSLink className="text-white" key={i} {...link} />
             })}
           </nav>
-          <span>&copy; JOSEPH PACKARD</span>
+          <span>&copy; JOSEPH & DANIELLE PACKARD</span>
         </div>
       </div>
     </footer>
