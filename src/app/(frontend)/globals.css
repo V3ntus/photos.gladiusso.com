@@ -1230,17 +1230,43 @@ body {
 
 /* The scrub viewport (§3.2 "1:1 smooth scrub"): drag, wheel or touch pans
    the rail 1:1 — frames and their sprocket bands together. No scrollbar is
-   shown and `scroll-snap` settles frames near the scrollport center; browsers
-   without `scroll-snap` simply get free 1:1 scrubbing. */
+   shown and `scroll-snap` snaps `mandatory`, so every scroll settles a frame
+   dead-center in the scrollport — the enlarger gate always holds a negative;
+   browsers without `scroll-snap` simply get free 1:1 scrubbing. The
+   grab-to-scrub pointer grip in the component releases the snap while the
+   film is held (`.film-strip__scroll--scrub`). `scroll-behavior: smooth` eases
+   the native end-of-scroll snap onto the gate too; the scrub class forces
+   `auto` so the component's per-frame `scrollLeft` writes track the hand
+   instantly instead of lagging behind the CSS scroll animation. */
 .film-strip__scroll {
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  scroll-snap: x proximity;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
   scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film-strip__scroll {
+    scroll-behavior: auto;
+  }
 }
 
 .film-strip__scroll::-webkit-scrollbar {
   display: none;
+}
+
+/* Grab-to-scrub — the class the component's pointer grip toggles (§3.2): the
+   browser only pans an `overflow` scroller on wheel and touch, so the
+   component drives `scrollLeft` by hand while the film is held. Holding it
+   releases `scroll-snap` so the rail tracks the hand 1:1 (the component
+   glides to the nearest gate on release), the cursor grips, and picking up
+   the film doesn't start a text selection. */
+.film-strip__scroll--scrub {
+  cursor: grabbing;
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+  user-select: none;
 }
 
 /* The rail: `width: max-content` makes the box — and the bands riding in
@@ -1331,6 +1357,12 @@ body {
   height: 100%;
   width: 100%;
   object-fit: cover;
+
+  /* The strip is a scrub surface, not a drag source: grabbing a negative
+     must take up the film, not tow the picture out of the page. The JS
+     `dragstart` guard in the component backs this up cross-browser. */
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 /* Frame number tag (§4.1) — `▶ 14A` rides the bottom band at the film's
